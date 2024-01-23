@@ -367,25 +367,25 @@ def init_pandora():
                 return NoContext()
 
         preprompt="""
-    The chat/console in which you currently interact with the user is a streamlit app. 
-    Thanks to the 'st' helper object (an st_stacker object), the python console supports streamlit commands and the display of widgets in the chat.
-    This is made possible by stacking the streamlit calls you make in your scripts and resolve the stack in the streamlit app's main script.
-    Due to this peculiar implementation, outputs of widgets are st_output placeholder object. 
-    Their .value attribute will be updated in real time as soon as the widget is rendered and has a non-empty state. 
-    You must therefore always use this attribute when accessing values of widgets.
-    Remember also that your scripts will run only once. 
-    Conventional streamlit scripting logic, relying on the script looping on itself, is not possible here. 
-    You must therefore implement all the interactive logic of widgets using functions passed as callbacks.
-    example: 
-        def on_click():
-            st.write("You entered: "+txt.value)
+        The chat/console in which you currently interact with the user is a streamlit app. 
+        Thanks to the 'st' helper object (an st_stacker object), the python console supports streamlit commands and the display of widgets in the chat.
+        This is made possible by stacking the streamlit calls you make in your scripts and resolve the stack in the streamlit app's main script.
+        Due to this peculiar implementation, outputs of widgets are st_output placeholder object. 
+        Their .value attribute will be updated in real time as soon as the widget is rendered and has a non-empty state. 
+        You must therefore always use this attribute when accessing values of widgets.
+        Remember also that your scripts will run only once. 
+        Conventional streamlit scripting logic, relying on the script looping on itself, is not possible here. 
+        You must therefore implement all the interactive logic of widgets using functions passed as callbacks.
+        example: 
+            def on_click():
+                st.write("You entered: "+txt.value)
 
-        txt=st.text_input("Enter text here:")
-        st.button("click me!",on_click=on_click)
+            txt=st.text_input("Enter text here:")
+            st.button("click me!",on_click=on_click)
 
-    Use streamlit features as your primary way to display images, videos, audio, plots, forms, dataframes and other interactive elements in the chat.
-    Worth mentioning, stdin is redirected to a custom modal input widget, thus allowing to use standard python 'input' command seamlessly.
-    """
+        Use streamlit features as your primary way to display images, videos, audio, plots, forms, dataframes and other interactive elements in the chat.
+        Worth mentioning, stdin is redirected to a custom modal input widget, thus allowing to use standard python 'input' command seamlessly.
+        """
         replacements=[
             ('import streamlit as st',''),
             ('plt.show()','st.pyplot(plt.gcf())'),
@@ -393,8 +393,7 @@ def init_pandora():
             ('st.pyplot()','st.pyplot(plt.gcf())'),
             ]
         infos=[
-            "Code execution environment: User's local system (Lubuntu)",
-            "Files stored in the workfolder (including your configuration and memory files) will be automatically loaded and dumped to the cloud (firebase storage) when he logs in and out.",
+            "Code execution environment: User's local system",
             "The user's OpenAI api key (and other secrets) necessary to make you and your tools function are all stored safely encrypted in the users database."
             "clear() method clears the chat (wipes all messages and widgets from the st_stacker's stack). Context memory remains.",
             "exit() or quit() methods ends the session and logs the user out gracefully."
