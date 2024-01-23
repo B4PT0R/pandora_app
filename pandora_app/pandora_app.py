@@ -9,22 +9,22 @@ if not sys.path[0]==_root_:
 from tools.restrict_module import restrict_module
 from tools.crypto import encrypt,decrypt,gen_lock, check_lock
 import streamlit as st
-from tools.firebase_tools import firebase_app_is_initialized,firebase_init_app,FirestoreDocument,FirebaseStorage
-if not firebase_app_is_initialized():
-    firebase_init_app(dict(st.secrets["firebase_credentials"]))
 from streamlit_stacker import st_stacker
 from pandora_ai import Pandora
 from pandora_ai.pandora_agent import NoContext
-from tools.google_search import init_google_search
-google_search=init_google_search(st.secrets["google_custom_search"]["api_key"],st.secrets["google_custom_search"]["cx"])
 from tools.tex_to_pdf import tex_to_pdf
 from streamlit_input_box import input_box
 from tools.whisperSTT import WhisperSTT
 from streamlit_TTS import openai_text_to_audio,auto_play
+from objdict_bf import objdict
 import shutil
 import time
 import json
 import io
+
+if not os.path.isfile(root_join("users.json")):
+    with open(root_join("users.json"),'w') as f:
+        json.dump({},f)
 
 #------------------------shortcuts--------------------------
 
@@ -100,21 +100,6 @@ def terminate_streamlit_server():
     id = os.getpid()
     os.kill(id, signal.SIGTERM)
 
-def clear_screen():
-    # Use a div with a large height to create the blank space
-    blank_space_html = """
-    <div style='height: 100vh;'></div>
-    """
-    st.markdown(blank_space_html, unsafe_allow_html=True)
-
-#dumps the entire user folder to the cloud
-def dump_to_cloud():
-    cloud=FirebaseStorage()
-    try:
-        cloud.dump_folder_to_cloud(state.user_folder,state.user)
-    except Exception as e:
-        st.exception(e)
-
 def log_out():
     state.log_out=True
     state.needs_rerun=True
@@ -182,31 +167,21 @@ def make_menu():
         def on_settings_click():
             state.page='settings'
         st.button("Settings",on_click=on_settings_click,use_container_width=True)
-        
-#Sets the welcome message header and help expander
-def make_welcome():
-    st.subheader("Welcome to StreamPy interactive interpreter.")
-    with st.expander("Click here to get help."):
-        with open(root_join("README.md"),'r') as f:
-            st.write(f.read())
 
 def make_sign_up():
     def on_submit_click():
-        if not state.sign_up_username=="" and not state.sign_up_password=="" and not state.sign_up_confirm_password=="" and not state.email=="" and state.sign_up_password==state.sign_up_confirm_password:
+        if not state.sign_up_username=="" and not state.sign_up_password=="" and not state.sign_up_confirm_password=="" and state.sign_up_password==state.sign_up_confirm_password:
             try:
-                doc=FirestoreDocument('Documents','Users')
-                users=doc.load()
-                emails=[users[user].get('email') for user in users]
-                if not state.sign_up_username in users and not state.email in emails:
+                users=objdict.load(root_join("users.json"))
+                if not state.sign_up_username in users:
                     state.user=state.sign_up_username
                     state.password=state.sign_up_password
                     state.openai_api_key=None
                     users[state.user]={
                         'password':gen_lock(state.password,30),
-                        'email':state.email,
                         'OpenAI_API_key':None
                     }
-                    doc.dump(users)
+                    users.dump()
                     state.authenticated=True 
                     state.needs_rerun=True 
                 else:
@@ -220,7 +195,6 @@ def make_sign_up():
 
     with st.form("sign_up",clear_on_submit=True):
         st.text_input("Username:",key='sign_up_username')
-        st.text_input("E-mail:",key='email')
         st.text_input("Password:",type="password",key='sign_up_password')
         st.text_input("Confirm password:",type="password",key='sign_up_confirm_password')
         st.form_submit_button("Submit",on_click=on_submit_click)
@@ -229,8 +203,7 @@ def make_sign_in():
     def on_submit_click():
         if not state.sign_in_username=="" and not state.sign_in_password=="":
             try:
-                doc=FirestoreDocument('Documents','Users')
-                users=doc.load()
+                users=objdict.load(root_join("users.json"))
                 if state.sign_in_username in users:
                     if check_lock(state.sign_in_password,users[state.sign_in_username]['password']):
                         state.user=state.sign_in_username
@@ -308,13 +281,12 @@ def make_settings():
 
 def make_OpenAI_API_request():
     st.subheader("OpenAI API key")
-    st.write("To interact with Pandora (the AI assistant), you need to provide a valid OpenAI API key. This API key will be stored safely encrypted in the database, in such a way that you only can use it (not even me). If you don't provide any, Pandora will still work as a mere python console, but without the possibility to interact with the assistant.")
+    st.write("To interact with Pandora (the AI assistant) and enjoy voice interaction, you need to provide a valid OpenAI API key. This API key will be stored safely encrypted in a local database, in such a way that you only can use it. If you don't provide any, Pandora will still work as a mere python console, but without the possibility to interact with the assistant.")
     def on_submit():
         state.openai_api_key=state.openai_api_key_input
-        doc=FirestoreDocument('Documents','Users')
-        users=doc.load()
+        users=objdict.load(root_join("users.json"))
         users[state.user].update({'OpenAI_API_key':encrypt(state.openai_api_key,key=state.password)})
-        doc.dump(users)
+        users.dump()
         state.needs_rerun=True
         
     with st.form("OpenAI_API_Key",clear_on_submit=True):
@@ -469,43 +441,9 @@ def init_pandora():
             description="show_pdf(path_or_url) # Display a pdf document in the chat interface.",
             obj=show_pdf
         )
-
-
-        def websearch(query,num=5,type="web"):
-            state.agent.status("Searching the web...")
-            results=google_search(query,num=num,type=type)
-            state.agent.observe(results)
-        
-        state.agent.add_tool(
-            name="websearch",
-            description="websearch(query,num=5,type='web') # Make a google search. type is either 'web' or 'image'. Results are observed automatically.",
-            obj=websearch
-        )
         
 
         if state.mode=='local':
-
-            def init_spotify_client():
-                import spotipy
-                from spotipy.oauth2 import SpotifyOAuth
-
-                # Set your Spotify Developer credentials
-                creds=dict(st.secrets['spotify_credentials'])
-
-                # Create the SpotifyOAuth object
-                sp_oauth = SpotifyOAuth(**creds)
-
-                # Create the Spotify client
-                sp = spotipy.Spotify(auth_manager=sp_oauth)
-
-                return sp
-
-            state.agent.add_tool(
-                name="spotify_client",
-                type="object",
-                description="spotify_client # a pre-authenticated spotify client as returned by spotipy.Spotify(auth_manager=sp_oauth). No need to authenticate, full scope granted.",
-                obj=init_spotify_client()
-            )
 
             def open_in_new_tab(url):
                 import webbrowser
@@ -525,8 +463,6 @@ def initialize_session():
     with st.spinner("Please wait..."):
         if state.user_folder=="":
             state.user_folder=root_join("UserFiles",state.user) 
-        cloud=FirebaseStorage()
-        cloud.load_folder_from_cloud(state.user,state.user_folder)
         prepare_user_folder()
         os.chdir(state.user_folder)
         init_pandora()
@@ -537,8 +473,6 @@ def initialize_session():
 def do_log_out():
     st.subheader("Login out of your session.")
     with st.spinner("Please wait.."):
-        dump_to_cloud()
-        shutil.rmtree(state.user_folder)
         state.authenticated=False
         state.user=""
         state.password=""
@@ -549,7 +483,6 @@ def do_log_out():
         state.agent=None
         state.session_has_initialized=False
         state.needs_rerun=True
-        os.chdir(_root_)
         time.sleep(2)
 
 def make_goodbye():
