@@ -26,6 +26,9 @@ if not os.path.isfile(root_join("users.json")):
     with open(root_join("users.json"),'w') as f:
         json.dump({},f)
 
+if not os.path.isdir(root_join("UserFiles")):
+    os.mkdir(root_join("UserFiles"))
+
 #------------------------shortcuts--------------------------
 
 state=st.session_state

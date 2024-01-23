@@ -26,7 +26,11 @@ setup(
     },
     # Include the launch script in the package data
     package_data={
-        'pandora_app': ['launch_app.py'],
+        'pandora_app': [
+            'launch_app.py',
+            '.streamlit/*',  # Include all files in the .streamlit folder
+            'app_images/*',  # Include all files in the app_images folder
+        ],
     },
     # Specify the dependencies
     install_requires=[

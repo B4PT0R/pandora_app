@@ -15,7 +15,10 @@ load_dotenv(_root_)
 
 def WhisperSTT(openai_api_key=None,start_prompt="Start recording",stop_prompt="Stop recording",just_once=False,use_container_width=False,language=None,callback=None,args=(),kwargs={},key=None):
     if not 'openai_client' in st.session_state:
-        st.session_state.openai_client=OpenAI(api_key=openai_api_key or os.getenv('OPENAI_API_KEY'))
+        if openai_api_key:
+            st.session_state.openai_client=OpenAI(api_key=openai_api_key)
+        else:
+            st.session_state.openai_client=None
     if not '_last_speech_to_text_transcript_id' in st.session_state:
         st.session_state._last_speech_to_text_transcript_id=0
     if not '_last_speech_to_text_transcript' in st.session_state:
@@ -26,7 +29,7 @@ def WhisperSTT(openai_api_key=None,start_prompt="Start recording",stop_prompt="S
     new_output=False
     if audio is None:
         output=None
-    else:
+    elif st.session_state.openai_client:
         id=audio['id']
         new_output=(id>st.session_state._last_speech_to_text_transcript_id)
         if new_output:
@@ -54,6 +57,8 @@ def WhisperSTT(openai_api_key=None,start_prompt="Start recording",stop_prompt="S
             output=st.session_state._last_speech_to_text_transcript
         else:
             output=None
+    else:
+        output=None
 
     if key:
         st.session_state[key+'_output']=output
