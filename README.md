@@ -25,11 +25,12 @@ The App is designed to be user-friendly yet as powerful as an AI python console 
 
 ## Installation
 
+Local installation:
 ```bash
 $ pip install pandora-app
 ```
 
-Alternatively you may use the web-app here
+Alternatively you may use the web-app (here)[https://pandora-ai.streamlit.app/]
 
 ## Usage
 
