@@ -30,7 +30,7 @@ Local installation:
 $ pip install pandora-app
 ```
 
-Alternatively you may use the web-app (here)[https://pandora-ai.streamlit.app/]
+Alternatively you may use the web-app [here](https://pandora-ai.streamlit.app/)
 
 ## Usage
 
