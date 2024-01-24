@@ -11,9 +11,9 @@ The App is designed to be user-friendly yet as powerful as an AI python console 
 
 - **Multilingual**: Interact with the assistant in many languages thanks to its speech recognition and vocal synthesis capabilities (OpenAI).
 
-- **Data/File/Image Analysis**: Transmit files or images for analysis. The Agent can observe text, files, data structures, python objects and modules (for documentation and inspection), 
+- **Data/File/Image Analysis**: Transmit files or images for analysis. The Agent can observe text, files, data structures, python objects and modules (for documentation and inspection), as well as images thanks to its vision feature.
 
-- **Dynamic Streamlit Interface and Interactive Widgets**: You or the AI can use the full range of Streamlit commands via the console to generate widgets in the chat interface.
+- **Dynamic Streamlit Interface and Interactive Widgets**: You or the AI can use the full range of Streamlit commands via the console to generate widgets in the chat interface in real time.
 
 - **Image Generation**: Create images from textual descriptions with DALL-e 3.
 
