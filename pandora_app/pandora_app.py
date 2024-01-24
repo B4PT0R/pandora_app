@@ -464,9 +464,8 @@ def initialize_session():
     st.subheader("Initializing your session.")
     with st.spinner("Please wait..."):
         if state.user_folder=="":
-            state.user_folder=root_join("UserFiles",state.user) 
+            state.user_folder=Pandora.folder_join(state.user) 
         prepare_user_folder()
-        os.chdir(state.user_folder)
         init_pandora()
         state.session_has_initialized=True
         state.needs_rerun=True
