@@ -46,6 +46,7 @@ def initialize_state(state):
             Pandora.setup_folder(root_join("UserFiles"))
             state.mode="web"
         else:
+            Pandora.setup_folder()
             state.mode="local"
 
     if not 'firebase' in state:
