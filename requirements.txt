@@ -1,5 +1,5 @@
 beautifulsoup4
-firebase-admin
+firebase-user
 get-gecko-driver
 google-api-python-client
 gTTS

@@ -16,6 +16,7 @@ from tools.tex_to_pdf import tex_to_pdf
 from streamlit_input_box import input_box
 from tools.whisperSTT import WhisperSTT
 from streamlit_TTS import openai_text_to_audio,auto_play
+from firebase_user import FirebaseClient
 from objdict_bf import objdict
 import shutil
 import time
@@ -45,6 +46,10 @@ def initialize_state(state):
             state.mode="web"
         else:
             state.mode="local"
+
+    if not 'firebase' in state:
+        config=objdict.load(root_join("app_config.json"))
+        state.firebase=FirebaseClient(config)
 
     #Username
     if 'user' not in state:
@@ -173,18 +178,18 @@ def make_menu():
 
 def make_sign_up():
     def on_submit_click():
-        if not state.sign_up_username=="" and not state.sign_up_password=="" and not state.sign_up_confirm_password=="" and state.sign_up_password==state.sign_up_confirm_password:
+        if state.sign_up_username and state.sign_up_email and state.sign_up_password and state.sign_up_confirm_password and state.sign_up_password==state.sign_up_confirm_password:
             try:
-                users=objdict.load(root_join("users.json"))
-                if not state.sign_up_username in users:
+                state.firebase.auth.sign_up(state.sign_up_email,state.sign_up_password)
+                if state.firebase.authenticated:
                     state.user=state.sign_up_username
                     state.password=state.sign_up_password
                     state.openai_api_key=None
-                    users[state.user]={
-                        'password':gen_lock(state.password,30),
+                    data={
+                        'name':state.sign_up_username,
                         'OpenAI_API_key':None
                     }
-                    users.dump()
+                    state.firebase.firestore.set_document(data)
                     state.authenticated=True 
                     state.needs_rerun=True 
                 else:
@@ -194,35 +199,33 @@ def make_sign_up():
                 st.exception(e)
                 st.warning("Something went wrong. Please try again.")    
         else:
-            st.warning("Non-empty username email and password required.")
+            st.warning("Non-empty username, email and password required.")
 
     with st.form("sign_up",clear_on_submit=True):
         st.text_input("Username:",key='sign_up_username')
+        st.text_input("Email:",key='sign_up_email')
         st.text_input("Password:",type="password",key='sign_up_password')
         st.text_input("Confirm password:",type="password",key='sign_up_confirm_password')
         st.form_submit_button("Submit",on_click=on_submit_click)
 
 def make_sign_in():
     def on_submit_click():
-        if not state.sign_in_username=="" and not state.sign_in_password=="":
+        if state.sign_in_email and state.sign_in_password:
             try:
-                users=objdict.load(root_join("users.json"))
-                if state.sign_in_username in users:
-                    if check_lock(state.sign_in_password,users[state.sign_in_username]['password']):
-                        state.user=state.sign_in_username
-                        state.password=state.sign_in_password
-                        if users[state.user].get('OpenAI_API_key'):
-                            state.openai_api_key=decrypt(users[state.user]['OpenAI_API_key'],state.password)
-                        else:
-                            state.openai_api_key=None
-                        state.authenticated=True 
-                        state.needs_rerun=True                  
+                state.firebase.auth.sign_in(state.sign_in_email,state.sign_in_password)
+                if state.state.firebase.authenticated:
+                    data=state.firebase.firestore.get_document()
+                    state.user=data.name
+                    state.password=state.sign_in_password
+                    if data.get('OpenAI_API_key'):
+                        state.openai_api_key=decrypt(data.OpenAI_API_key,state.password)
                     else:
-                        st.warning("Wrong password.")
-                        time.sleep(0.5)
+                        state.openai_api_key=None
+                    state.authenticated=True 
+                    state.needs_rerun=True                  
                 else:
-                    st.warning("This username doesn't exist in the database.")
-
+                    st.warning("Wrong email or password.")
+                    time.sleep(0.5)
             except Exception as e:
                 st.exception(e)
                 st.warning("Something went wrong. Please try again.")    
@@ -230,7 +233,7 @@ def make_sign_in():
             st.warning("Non-empty username and password required.")
 
     with st.form("login",clear_on_submit=True):
-        st.text_input("Username:",key='sign_in_username')
+        st.text_input("E-mail:",key='sign_in_email')
         st.text_input("Password:",type="password",key='sign_in_password')
         st.form_submit_button("Submit",on_click=on_submit_click)
 
@@ -287,9 +290,9 @@ def make_OpenAI_API_request():
     st.write("To interact with Pandora (the AI assistant) and enjoy voice interaction, you need to provide a valid OpenAI API key. This API key will be stored safely encrypted in a local database, in such a way that you only can use it. If you don't provide any, Pandora will still work as a mere python console, but without the possibility to interact with the assistant.")
     def on_submit():
         state.openai_api_key=state.openai_api_key_input
-        users=objdict.load(root_join("users.json"))
-        users[state.user].update({'OpenAI_API_key':encrypt(state.openai_api_key,key=state.password)})
-        users.dump()
+        data=state.firebase.firestore.get_document()
+        data.update({'OpenAI_API_key':encrypt(state.openai_api_key,key=state.password)})
+        state.firebase.firestore.set_document(data)
         state.needs_rerun=True
         
     with st.form("OpenAI_API_Key",clear_on_submit=True):
