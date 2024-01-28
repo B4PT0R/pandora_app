@@ -30,8 +30,6 @@ Local installation:
 $ pip install pandora-app
 ```
 
-Alternatively you may use the web-app [here](https://pandora-ai.streamlit.app/)
-
 ## Usage
 
 open a terminal and run :
@@ -42,11 +40,13 @@ $ pandora
 
 The app will start a local webserver and launch in your default webbrowser.
 
-The app is local and runs python code locally on your system, but user connexion and cloud storage are managed via a cloud provider.
+Alternatively you may use the web-app [here](https://pandora-ai.streamlit.app/)
 
-You will thus need to create an account and authenticate to use the app.
+The installed app is local and runs python code locally on your system, but user connexion and cloud storage are managed via a cloud provider, so that your documents can be synchronized with the web application.
 
-Register your OpenAI API key to enjoy all the AI features (Your API key can be entered from the app, provided from your system as an environment variable or can be kept safely encrypted in your user profile within the database so that you may use pandora from anywhere, including from your smartphone thanks to the Streamlit cloud version of the app).
+You will thus need to create an account and authenticate to use the app (free).
+
+Pandora requires an OpenAI API key to enable the AI features. Your API key can be entered from the app, provided from your system as an environment variable or can be kept safely encrypted in your user profile within the database so that you may use pandora from anywhere, including from your smartphone thanks to the Streamlit cloud version of the app.
 
 That's it, you can start typing your python commands or interact with Pandora in natural language via the input cell.
 
