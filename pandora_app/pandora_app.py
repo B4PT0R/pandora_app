@@ -140,14 +140,14 @@ def prepare_user_folder():
         os.mkdir(state.user_folder)
 
 def load_user_data():
-    data=state.firebase.firestore.get_document()
+    data=state.firebase.firestore.get_document().copy()
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
             data[key]=decrypt(data[key],key=state.password)
     state.user_data=data
 
 def dump_user_data():
-    data=state.user_data
+    data=state.user_data.copy()
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
             data[key]=encrypt(data[key],key=state.password)
@@ -209,7 +209,6 @@ def make_sign_up():
                     language='en'
                 )
                 dump_user_data()
-                state.authenticated=True 
                 state.needs_rerun=True               
         else:
             st.warning("Non-empty username, email and password required.")
@@ -229,8 +228,8 @@ def make_sign_in():
             except Exception as e:
                 st.warning("Wrong email or password. Please try again.")
             else:
-                load_user_data()
                 state.password=state.sign_in_password
+                load_user_data()
                 state.needs_rerun=True                  
         else:
             st.warning("Non-empty username and password required.")
@@ -293,13 +292,12 @@ def make_settings():
     with st.form("settings"):
         st.subheader("Settings")
         st.write("OpenAI API key used to power the AI assistant:")
-        st.text_input("OpenAI API key",value=state.user_data.openai_api_key,key='openai_api_key_input')
+        st.text_input("OpenAI API key",value=state.user_data.get('openai_api_key'),key='openai_api_key_input')
         st.write("Google custom search credentials (used to enable the websearch tool):")
-        st.text_input("Google custom search API key",value=state.user_data.google_search_api_key,key='google_search_api_key_input')
-        st.text_input("Google custom search CX",value=state.user_data.google_search_cx,key='google_search_cx_input')
+        st.text_input("Google custom search API key",value=state.user_data.get('google_search_api_key'),key='google_search_api_key_input')
+        st.text_input("Google custom search CX",value=state.user_data.get('google_search_cx'),key='google_search_cx_input')
         st.write("Default language:")
-        from gtts.lang import tts_langs
-        st.selectbox("Language",options=tts_langs().keys(),value=state.user_data.language,key='select_lang')
+        st.selectbox("Language",index=langs().index(state.user_data.language),options=langs(),key='select_lang')
         st.form_submit_button("Save settings",on_click=on_submit)
 
 def make_OpenAI_API_request():
