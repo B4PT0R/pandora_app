@@ -12,6 +12,7 @@ import streamlit as st
 from streamlit_stacker import st_stacker
 from pandora_ai import Pandora
 from pandora_ai.pandora_agent import NoContext
+from tools.google_search import google_search
 from tools.tex_to_pdf import tex_to_pdf
 from streamlit_input_box import input_box
 from tools.whisperSTT import WhisperSTT
@@ -53,6 +54,9 @@ def initialize_state(state):
         config=objdict.load(root_join("app_config.json"))
         state.firebase=FirebaseClient(config)
 
+    if not 'user_data' in state:
+        state.user_data=None
+
     #Username
     if 'user' not in state:
         state.user=None
@@ -60,9 +64,6 @@ def initialize_state(state):
     #Password
     if 'password' not in state:
         state.password=None
-
-    if 'authenticated'not in state:
-        state.authenticated=False
 
     if 'needs_rerun' not in state:
         state.needs_rerun=False
@@ -82,7 +83,6 @@ def initialize_state(state):
     if 'user_folder' not in state:
         state.user_folder=""
 
-
     #Main streamlit commands stacker for the console queue (allows using streamlit commands directly in the input cell)
     if 'stacker' not in state:
         state.stacker=st_stacker(mode='streamed')
@@ -90,9 +90,6 @@ def initialize_state(state):
     #the AI assistant. Initialized at user login.
     if 'agent' not in state:
         state.agent=None
-
-    if 'language' not in state:
-        state.language='fr'
 
     #A variable allowing access to the chat container from anywhere
     if 'chat' not in state:
@@ -142,6 +139,21 @@ def clear():
 def prepare_user_folder():
     if not os.path.exists(state.user_folder):
         os.mkdir(state.user_folder)
+
+def load_user_data():
+    data=state.firebase.firestore.get_document()
+    for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
+        if data.get(key):
+            data[key]=decrypt(data[key],state.password)
+    state.user_data=data
+
+def dump_user_data():
+    data=state.user_data
+    for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
+        if data.get(key):
+            data[key]=encrypt(data[key],state.password)
+    state.firebase.firstore.set_document(data)
+
     
 #---------------------------------App layout-------------------------------------
 
@@ -150,7 +162,7 @@ def make_menu():
    with st.sidebar:
 
         st.subheader("Session")
-        st.text(state.user)
+        st.text(state.user_data.name)
         def on_log_out_click():
             state.log_out=True
         st.button("Log out",on_click=on_log_out_click,use_container_width=True)
@@ -167,8 +179,10 @@ def make_menu():
         st.toggle("Voice enabled",value=state.agent.config.voice_mode,on_change=on_voice_mode_change,key='voice_mode')
 
         def on_lang_change():
+            state.user_data.language=state.language
             state.agent.config.language=state.language
-        st.selectbox("Language:",index=langs().index(state.agent.config.language),options=langs(),on_change=on_lang_change,key='language')
+            dump_user_data()
+        st.selectbox("Language:",index=langs().index(state.user_data.language),options=langs(),on_change=on_lang_change,key='language')
 
         def on_restart_click():
             restart()
@@ -187,14 +201,15 @@ def make_sign_up():
                 st.warning("Something went wrong while attempting to create your account. Please try again.")
                 st.exception(e) 
             else:
-                state.user=state.sign_up_username
                 state.password=state.sign_up_password
-                state.openai_api_key=None
-                data={
-                    'name':state.sign_up_username,
-                    'OpenAI_API_key':None
-                }
-                state.firebase.firestore.set_document(data)
+                state.user_data=objdict(
+                    name=state.sign_up_username,
+                    openai_api_key=None,
+                    google_search_api_key=None,
+                    google_search_cx=None,
+                    language='en'
+                )
+                dump_user_data()
                 state.authenticated=True 
                 state.needs_rerun=True               
         else:
@@ -215,14 +230,8 @@ def make_sign_in():
             except Exception as e:
                 st.warning("Wrong email or password. Please try again.")
             else:
-                data=state.firebase.firestore.get_document()
-                state.user=data.name
+                load_user_data()
                 state.password=state.sign_in_password
-                if data.get('OpenAI_API_key'):
-                    state.openai_api_key=decrypt(data.OpenAI_API_key,state.password)
-                else:
-                    state.openai_api_key=None
-                state.authenticated=True 
                 state.needs_rerun=True                  
         else:
             st.warning("Non-empty username and password required.")
@@ -268,26 +277,38 @@ def make_login():
 def make_settings():
     def on_submit():
         st.success("Settings saved")
-        time.sleep(2)
+        if state.openai_api_key_input:
+            state.user_data.openai_api_key=state.openai_api_key_input
+        if state.google_search_api_key_input:
+            state.user_data.google_search_api_key=state.google_search_api_key_input
+        if state.google_search_cx_input:
+            state.user_data.google_search_cx=state.google_search_cx_input
+        if state.select_lang:
+            state.user_data.language=state.select_lang
+            state.agent.config.language=state.select_lang
+            
+        dump_user_data()
         state.page="default"
         state.needs_rerun=True
 
     with st.form("settings"):
         st.subheader("Settings")
-        st.text_input("OpenAI API key",value=state.openai_api_key,key='API_input')
+        st.write("OpenAI API key used to power the AI assistant:")
+        st.text_input("OpenAI API key",value=state.user_data.openai_api_key,key='openai_api_key_input')
+        st.write("Google custom search credentials (used to enable the websearch tool):")
+        st.text_input("Google custom search API key",value=state.user_data.google_search_api_key,key='google_search_api_key_input')
+        st.text_input("Google custom search CX",value=state.user_data.google_search_cx,key='google_search_cx_input')
+        st.write("Default language:")
         from gtts.lang import tts_langs
-        st.selectbox("Language",options=tts_langs().keys(),key='select_lang')
-        st.checkbox('Speech mode',key='select_speech')
+        st.selectbox("Language",options=tts_langs().keys(),value=state.user_data.language,key='select_lang')
         st.form_submit_button("Save settings",on_click=on_submit)
 
 def make_OpenAI_API_request():
     st.subheader("OpenAI API key")
-    st.write("To interact with Pandora (the AI assistant) and enjoy voice interaction, you need to provide a valid OpenAI API key. This API key will be stored safely encrypted in a local database, in such a way that you only can use it. If you don't provide any, Pandora will still work as a mere python console, but without the possibility to interact with the assistant.")
+    st.write("To interact with Pandora (the AI assistant) and enjoy voice interaction, you need to provide a valid OpenAI API key. This API key will be stored safely encrypted in your user profile. If you don't provide any, Pandora will still work as a mere python console, but without the possibility to interact with the assistant.")
     def on_submit():
-        state.openai_api_key=state.openai_api_key_input
-        data=state.firebase.firestore.get_document()
-        data.update({'OpenAI_API_key':encrypt(state.openai_api_key,key=state.password)})
-        state.firebase.firestore.set_document(data)
+        state.user_data.openai_api_key=state.openai_api_key_input
+        dump_user_data()
         state.needs_rerun=True
         
     with st.form("OpenAI_API_Key",clear_on_submit=True):
@@ -309,7 +330,7 @@ def make_chat():
     text=input_box(just_once=True,min_lines=1,max_lines=100,key='text')
     a,b=st.columns(2)
     with a:
-        voice=WhisperSTT(openai_api_key=state.openai_api_key,start_prompt="Talk to Pandora",use_container_width=True,language=state.language,just_once=True,key='voice')
+        voice=WhisperSTT(openai_api_key=decrypt(state.user_data.openai_api_key,key=state.password),start_prompt="Talk to Pandora",use_container_width=True,language=state.user_data.language,just_once=True,key='voice')
     with b:
         drop_file=st.button("Drop a file",use_container_width=True)
 
@@ -333,7 +354,7 @@ def make_chat():
 def init_pandora():
 
         def text_to_audio(text,language=None):
-            return openai_text_to_audio(text=text,openai_api_key=state.openai_api_key,language=language)
+            return openai_text_to_audio(text=text,openai_api_key=state.user_data.openai_api_key,language=language)
 
         def input_hook():
             txt=stk.modal_input(firebase_credentials=dict(st.secrets["firebase_credentials"]),firebase_config=dict(st.secrets["firebase_config"]))
@@ -370,11 +391,11 @@ def init_pandora():
         preprompt="""
         The chat/console in which you currently interact with the user is a streamlit app. 
         Thanks to the 'st' helper object (an st_stacker object), the python console supports streamlit commands and the display of widgets in the chat.
-        This is made possible by stacking the streamlit calls you make in your scripts and resolve the stack in the streamlit app's main script.
+        This is made possible by stacking the streamlit calls you make in your scripts and resolve the stack every rerun in the streamlit app's main script.
         Due to this peculiar implementation, outputs of widgets are st_output placeholder object. 
         Their .value attribute will be updated in real time as soon as the widget is rendered and has a non-empty state. 
         You must therefore always use this attribute when accessing values of widgets.
-        Remember also that your scripts will run only once. 
+        Remember also that scripts run only once in this console setting. 
         Conventional streamlit scripting logic, relying on the script looping on itself, is not possible here. 
         You must therefore implement all the interactive logic of widgets using functions passed as callbacks.
         example: 
@@ -400,12 +421,12 @@ def init_pandora():
             "exit() or quit() methods ends the session and logs the user out gracefully."
         ]
         builtin_tools=['message','codeblock','status','observe','generate_image','memory']
-        state.agent=Pandora(openai_api_key=state.openai_api_key,work_folder=state.user_folder,builtin_tools=builtin_tools,preprompt=preprompt,infos=infos,input_hook=input_hook,display_hook=display_hook,context_handler=context_handler,text_to_audio_hook=text_to_audio,audio_play_hook=auto_play)
+        state.agent=Pandora(openai_api_key=state.user_data.openai_api_key,work_folder=state.user_folder,builtin_tools=builtin_tools,preprompt=preprompt,infos=infos,input_hook=input_hook,display_hook=display_hook,context_handler=context_handler,text_to_audio_hook=text_to_audio,audio_play_hook=auto_play)
         state.agent.config.update(
             voice_mode=False,
-            username=state.user,
+            username=state.user_data.name,
             code_replacements=replacements,
-            language=state.language,
+            language=state.user_data.language,
             model='gpt-4-vision-preview',
             vision=True
         )
@@ -421,6 +442,25 @@ def init_pandora():
             obj=state.stacker,
             type="object"
         )
+
+        if state.user_data.get('google_search_api_key'):
+
+            
+            def websearch(*args,**kwargs):
+                results=google_search(state.user_data.google_search_api_key,state.user_data.google_search_cx,*args,**kwargs)
+                state.agent.observe(results)
+
+            state.agent.add_tool(
+                name="websearch",
+                description="websearch(query,num=5,type='web') # Make a google search. Results are automatically observed.",
+                parameters=dict(
+                    query="The search query.",
+                    num="The desired number of search results.",
+                    type="either 'web' or 'image', determines the type of the research."
+                ),
+                required=['query'],
+                obj=websearch
+            )
 
         state.agent.add_tool(
             name='tex_to_pdf',
@@ -461,7 +501,7 @@ def initialize_session():
     #Initialize the user's session
     st.subheader("Initializing your session.")
     with st.spinner("Please wait..."):
-        state.user_folder=Pandora.folder_join(state.user)
+        state.user_folder=Pandora.folder_join(state.user_data.name)
         state.firebase.storage.load_folder(state.user_folder) 
         prepare_user_folder()
         init_pandora()
@@ -472,14 +512,13 @@ def initialize_session():
 def do_log_out():
     st.subheader("Logging you out of your session.")
     with st.spinner("Please wait..."):
+        dump_user_data()
         state.firebase.storage.dump_folder(state.user_folder)
         state.firebase.auth.log_out()
         if state.mode=='web':
             shutil.rmtree(state.user_folder)
-        state.authenticated=False
-        state.user=""
+        state.user_data=None
         state.password=""
-        state.openai_api_key=None
         state.user_folder=""
         state.stacker.clear()
         state.log_out=False
@@ -514,10 +553,10 @@ st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state=
 
 if state.page=="goodbye":
     make_goodbye()
-elif not state.authenticated:
+elif not state.firebase.authenticated:
     #Ask for credentials
     make_login()
-elif state.openai_api_key is None:
+elif not state.user_data.get('openai_api_key'):
     make_OpenAI_API_request()
 elif not state.session_has_initialized:
     #Initialize the session
