@@ -43,6 +43,7 @@ def initialize_state(state):
 
     if 'mode' not in state:
         if _root_.startswith('/mount') or _root_.startswith('/app'):
+            Pandora.setup_folder(root_join("UserFiles"))
             state.mode="web"
         else:
             state.mode="local"
@@ -459,8 +460,7 @@ def initialize_session():
     #Initialize the user's session
     st.subheader("Initializing your session.")
     with st.spinner("Please wait..."):
-        if state.user_folder=="":
-            state.user_folder=Pandora.folder_join(state.user)
+        state.user_folder=Pandora.folder_join(state.user)
         state.firebase.storage.load_folder(state.user_folder) 
         prepare_user_folder()
         init_pandora()
