@@ -126,8 +126,7 @@ def langs():
 #Restarts the whole session to startup state
 def restart():
     stk.clear()
-    if not state.openai_api_key=="":
-        init_pandora()
+    init_pandora()
         
 
 #Clears the console's queue
@@ -330,7 +329,7 @@ def make_chat():
     text=input_box(just_once=True,min_lines=1,max_lines=100,key='text')
     a,b=st.columns(2)
     with a:
-        voice=WhisperSTT(openai_api_key=decrypt(state.user_data.openai_api_key,key=state.password),start_prompt="Talk to Pandora",use_container_width=True,language=state.user_data.language,just_once=True,key='voice')
+        voice=WhisperSTT(openai_api_key=state.user_data.openai_api_key,start_prompt="Talk to Pandora",use_container_width=True,language=state.user_data.language,just_once=True,key='voice')
     with b:
         drop_file=st.button("Drop a file",use_container_width=True)
 
