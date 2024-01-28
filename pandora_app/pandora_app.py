@@ -143,14 +143,14 @@ def load_user_data():
     data=state.firebase.firestore.get_document()
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
-            data[key]=decrypt(data[key],state.password)
+            data[key]=decrypt(data[key],key=state.password)
     state.user_data=data
 
 def dump_user_data():
     data=state.user_data
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
-            data[key]=encrypt(data[key],state.password)
+            data[key]=encrypt(data[key],key=state.password)
     state.firebase.firestore.set_document(data)
 
     
