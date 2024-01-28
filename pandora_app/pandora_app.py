@@ -470,9 +470,11 @@ def initialize_session():
 
 def do_log_out():
     st.subheader("Logging you out of your session.")
-    with st.spinner("Please wait.."):
+    with st.spinner("Please wait..."):
         state.firebase.storage.dump_folder(state.user_folder)
         state.firebase.auth.log_out()
+        if state.mode=='web':
+            shutil.rmtree(state.user_folder)
         state.authenticated=False
         state.user=""
         state.password=""
