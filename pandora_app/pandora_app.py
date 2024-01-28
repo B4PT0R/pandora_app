@@ -151,7 +151,7 @@ def dump_user_data():
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
             data[key]=encrypt(data[key],state.password)
-    state.firebase.firstore.set_document(data)
+    state.firebase.firestore.set_document(data)
 
     
 #---------------------------------App layout-------------------------------------
