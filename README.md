@@ -42,7 +42,7 @@ $ pandora
 
 The app will start a local webserver and launch in your default webbrowser.
 
-The app is local and runs python code locally on your system, but user settings and cloud storage are managed via a cloud provider.
+The app is local and runs python code locally on your system, but user connexion and cloud storage are managed via a cloud provider.
 
 You will thus need to create an account and authenticate to use the app.
 
