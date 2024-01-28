@@ -50,7 +50,7 @@ Register your OpenAI API key to enjoy all the AI features (Your API key can be e
 
 That's it, you can start typing your python commands or interact with Pandora in natural language via the input cell.
 
-## Use Cases
+## Use cases
 
 - **Python Programming Learning**: Use Pandora to learn Python with interactive examples and real-time explanations.
 
