@@ -181,23 +181,20 @@ def make_sign_up():
         if state.sign_up_username and state.sign_up_email and state.sign_up_password and state.sign_up_confirm_password and state.sign_up_password==state.sign_up_confirm_password:
             try:
                 state.firebase.auth.sign_up(state.sign_up_email,state.sign_up_password)
-                if state.firebase.authenticated:
-                    state.user=state.sign_up_username
-                    state.password=state.sign_up_password
-                    state.openai_api_key=None
-                    data={
-                        'name':state.sign_up_username,
-                        'OpenAI_API_key':None
-                    }
-                    state.firebase.firestore.set_document(data)
-                    state.authenticated=True 
-                    state.needs_rerun=True 
-                else:
-                    st.warning("This username / email adress is already taken.")
-                
             except Exception as e:
-                st.exception(e)
-                st.warning("Something went wrong. Please try again.")    
+                st.warning("Something went wrong while attempting to create your account. Please try again.")
+                st.exception(e) 
+            else:
+                state.user=state.sign_up_username
+                state.password=state.sign_up_password
+                state.openai_api_key=None
+                data={
+                    'name':state.sign_up_username,
+                    'OpenAI_API_key':None
+                }
+                state.firebase.firestore.set_document(data)
+                state.authenticated=True 
+                state.needs_rerun=True               
         else:
             st.warning("Non-empty username, email and password required.")
 
@@ -213,22 +210,18 @@ def make_sign_in():
         if state.sign_in_email and state.sign_in_password:
             try:
                 state.firebase.auth.sign_in(state.sign_in_email,state.sign_in_password)
-                if state.state.firebase.authenticated:
-                    data=state.firebase.firestore.get_document()
-                    state.user=data.name
-                    state.password=state.sign_in_password
-                    if data.get('OpenAI_API_key'):
-                        state.openai_api_key=decrypt(data.OpenAI_API_key,state.password)
-                    else:
-                        state.openai_api_key=None
-                    state.authenticated=True 
-                    state.needs_rerun=True                  
-                else:
-                    st.warning("Wrong email or password.")
-                    time.sleep(0.5)
             except Exception as e:
-                st.exception(e)
-                st.warning("Something went wrong. Please try again.")    
+                st.warning("Wrong email or password. Please try again.")
+            else:
+                data=state.firebase.firestore.get_document()
+                state.user=data.name
+                state.password=state.sign_in_password
+                if data.get('OpenAI_API_key'):
+                    state.openai_api_key=decrypt(data.OpenAI_API_key,state.password)
+                else:
+                    state.openai_api_key=None
+                state.authenticated=True 
+                state.needs_rerun=True                  
         else:
             st.warning("Non-empty username and password required.")
 
@@ -467,7 +460,8 @@ def initialize_session():
     st.subheader("Initializing your session.")
     with st.spinner("Please wait..."):
         if state.user_folder=="":
-            state.user_folder=Pandora.folder_join(state.user) 
+            state.user_folder=Pandora.folder_join(state.user)
+        state.firebase.storage.load_folder(state.user_folder) 
         prepare_user_folder()
         init_pandora()
         state.session_has_initialized=True
@@ -475,8 +469,10 @@ def initialize_session():
         state.page="default"
 
 def do_log_out():
-    st.subheader("Login out of your session.")
+    st.subheader("Logging you out of your session.")
     with st.spinner("Please wait.."):
+        state.firebase.storage.dump_folder(state.user_folder)
+        state.firebase.auth.log_out()
         state.authenticated=False
         state.user=""
         state.password=""
