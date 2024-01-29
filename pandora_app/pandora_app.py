@@ -113,11 +113,11 @@ def log_out():
 
 def avatar(role):
     if role=='assistant':
-        return root_join("app_images/pandora-avatar.png")
+        return root_join("app_images","pandora-avatar.png")
     elif role=="user":
-        return root_join("app_images/user-avatar.png")
+        return root_join("app_images","user-avatar.png")
     elif role=="system":
-        return root_join("app_images/system-avatar.png")
+        return root_join("app_images","system-avatar.png")
 
 def langs():
     from gtts.lang import tts_langs
@@ -243,7 +243,7 @@ def make_sign_in():
 def make_login():
     _,c,_=st.columns([30,40,30])
     with c:
-        st.image(root_join("app_images/pandora_logo.png"))
+        st.image(root_join("app_images","pandora_logo.png"))
 
     title_html = """
     <div style="
@@ -316,7 +316,7 @@ def make_chat():
 
     _,c,_=st.columns([15,70,15])
     with c:
-        st.image(root_join("app_images/pandora_logo.png"),use_column_width=True)
+        st.image(root_join("app_images","pandora_logo.png"),use_column_width=True)
 
     
     state.chat=st.container()
