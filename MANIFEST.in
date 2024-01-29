@@ -1,0 +1,4 @@
+include pandora_app/.streamlit/*
+include pandora_app/app_images/*
+include pandora_app/app_config.json
+include pandora_app/launch_app.py
