@@ -24,10 +24,6 @@ import time
 import json
 import io
 
-if not os.path.isfile(root_join("users.json")):
-    with open(root_join("users.json"),'w') as f:
-        json.dump({},f)
-
 if not os.path.isdir(root_join("UserFiles")):
     os.mkdir(root_join("UserFiles"))
 
@@ -56,10 +52,6 @@ def initialize_state(state):
 
     if not 'user_data' in state:
         state.user_data=None
-
-    #Username
-    if 'user' not in state:
-        state.user=None
 
     #Password
     if 'password' not in state:
@@ -136,21 +128,23 @@ def clear():
 
 
 def prepare_user_folder():
+    state.user_folder=Pandora.folder_join(state.user_data.name)
     if not os.path.exists(state.user_folder):
         os.mkdir(state.user_folder)
+    state.firebase.storage.load_folder(state.user_folder)
 
 def load_user_data():
     data=state.firebase.firestore.get_document().copy()
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
-            data[key]=decrypt(data[key],key=state.password)
+            data[key]=decrypt(data[key],state.password)
     state.user_data=data
 
 def dump_user_data():
     data=state.user_data.copy()
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
-            data[key]=encrypt(data[key],key=state.password)
+            data[key]=encrypt(data[key],state.password)
     state.firebase.firestore.set_document(data)
 
     
@@ -497,9 +491,7 @@ def init_pandora():
 def initialize_session():
     #Initialize the user's session
     st.subheader("Initializing your session.")
-    with st.spinner("Please wait..."):
-        state.user_folder=Pandora.folder_join(state.user_data.name)
-        state.firebase.storage.load_folder(state.user_folder) 
+    with st.spinner("Please wait..."): 
         prepare_user_folder()
         init_pandora()
         state.session_has_initialized=True
@@ -522,7 +514,6 @@ def do_log_out():
         state.agent=None
         state.session_has_initialized=False
         state.needs_rerun=True
-        time.sleep(2)
 
 def make_goodbye():
     def text_with_css(text, **kwargs):
