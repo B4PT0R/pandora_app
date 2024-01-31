@@ -348,7 +348,7 @@ def init_pandora():
             return openai_text_to_audio(text=text,openai_api_key=state.user_data.openai_api_key,language=language)
 
         def input_hook():
-            txt=stk.modal_input(firebase_credentials=dict(st.secrets["firebase_credentials"]),firebase_config=dict(st.secrets["firebase_config"]))
+            txt=stk.modal_input(firebase_client=state.firebase)
             return txt.value
 
         def display_hook(message,status):
