@@ -134,7 +134,7 @@ def prepare_user_folder():
     state.firebase.storage.load_folder(state.user_folder)
 
 def load_user_data():
-    data=state.firebase.firestore.get_document().copy()
+    data=state.firebase.firestore.get_user_data().copy()
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
             data[key]=decrypt(data[key],state.password)
@@ -145,7 +145,7 @@ def dump_user_data():
     for key in ["openai_api_key","google_search_api_key","google_search_cx"]:
         if data.get(key):
             data[key]=encrypt(data[key],state.password)
-    state.firebase.firestore.set_document(data)
+    state.firebase.firestore.set_user_data(data)
 
     
 #---------------------------------App layout-------------------------------------
@@ -250,7 +250,7 @@ def make_login():
     </div>
     """
     st.markdown(title_html, unsafe_allow_html=True)
-
+    st.write("Hello! Please log in to your account or create one via the Sign-up tab (free).")
     tab1,tab2=st.tabs(["Sign-in","Sign-up"])
     with tab1:
         make_sign_in()
@@ -541,7 +541,7 @@ st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state=
 
 if state.page=="goodbye":
     make_goodbye()
-elif not state.firebase.authenticated:
+elif not state.firebase.auth.authenticated:
     #Ask for credentials
     make_login()
 elif not state.user_data.get('openai_api_key'):
