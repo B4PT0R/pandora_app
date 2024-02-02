@@ -54,6 +54,9 @@ def initialize_state(state):
     if 'password' not in state:
         state.password=None
 
+    if 'config' not in state:
+        state.config=objdict.load(root_join(".streamlit","conig.toml"),_backend='toml')
+
     if 'needs_rerun' not in state:
         state.needs_rerun=False
 
@@ -236,18 +239,17 @@ def make_login():
     with c:
         st.image(root_join("app_images","pandora_logo.png"))
 
-    title_html = """
+    title_html = f"""
     <div style="
-        background-color: #12161c;
+        background-color: {state.config.theme.backgroundColor};
         text-align: center;
         ">
-        <h1 style="color: #67b5f9; margin-bottom: 0;">Pandora</h1>
-        <hr style="border: 1px solid #67b5f9; margin: 5px auto; width: 50%;" />
-        <p style="color: #67b5f9; margin-top: 0;">OpenAI + Streamlit powered Python console</p>
+        <h1 style="color: {state.config.theme.primaryColor}; margin-bottom: 0;">Pandora</h1>
+        <hr style="border: 1px solid {state.config.theme.primaryColor}; margin: 5px auto; width: 50%;" />
+        <p style="color: {state.config.theme.primaryColor}; margin-top: 0;">OpenAI + Streamlit powered Python console</p>
     </div>
     """
     st.markdown(title_html, unsafe_allow_html=True)
-    st.write("Hello! Please log in to your account or create one via the Sign-up tab (free).")
     tab1,tab2=st.tabs(["Sign-in","Sign-up"])
     with tab1:
         make_sign_in()
