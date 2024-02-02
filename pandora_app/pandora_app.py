@@ -55,7 +55,7 @@ def initialize_state(state):
         state.password=None
 
     if 'config' not in state:
-        state.config=objdict.load(root_join(".streamlit","conig.toml"),_backend='toml')
+        state.config=objdict.load(root_join(".streamlit","config.toml"),_backend='toml')
 
     if 'needs_rerun' not in state:
         state.needs_rerun=False
