@@ -10,8 +10,7 @@ from tools.restrict_module import restrict_module
 from tools.crypto import encrypt,decrypt,gen_lock, check_lock
 import streamlit as st
 from streamlit_stacker import st_stacker
-from pandora_ai import Pandora
-from pandora_ai.pandora_agent import NoContext
+from pandora_ai import Pandora, NoContext
 from tools.google_search import google_search
 from tools.tex_to_pdf import tex_to_pdf
 from streamlit_input_box import input_box
@@ -21,8 +20,6 @@ from firebase_user import FirebaseClient
 from objdict_bf import objdict
 import shutil
 import time
-import json
-import io
 
 if not os.path.isdir(root_join("UserFiles")):
     os.mkdir(root_join("UserFiles"))
