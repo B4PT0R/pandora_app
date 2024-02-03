@@ -208,7 +208,7 @@ def make_sign_up():
                         dump_user_data()
                         state.needs_rerun=True
                 else:
-                    st.warning("The password doesn't match its confirmation. Please try again.")
+                    st.warning("Your password doesn't match its confirmation.")
             else:
                 st.warning("Your password should be at least 8 characters long.")                   
         else:
