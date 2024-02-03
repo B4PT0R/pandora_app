@@ -217,7 +217,7 @@ def make_sign_up():
     with st.form("sign_up",clear_on_submit=True):
         st.text_input("Username:",key='sign_up_username')
         st.text_input("Email:",key='sign_up_email')
-        st.text_input("Password:",type="password",key='sign_up_password')
+        st.text_input("Password (at least 8 characters long):",type="password",key='sign_up_password')
         st.text_input("Confirm password:",type="password",key='sign_up_confirm_password')
         st.form_submit_button("Submit",on_click=on_submit_click)
 
