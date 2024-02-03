@@ -200,6 +200,7 @@ def make_sign_up():
                     openai_api_key=None,
                     google_search_api_key=None,
                     google_search_cx=None,
+                    made_api_key_choice=False,
                     language='en'
                 )
                 dump_user_data()
@@ -295,9 +296,11 @@ def make_settings():
 
 def make_OpenAI_API_request():
     st.subheader("OpenAI API key")
-    st.write("To interact with Pandora (the AI assistant) and enjoy voice interaction, you need to provide a valid OpenAI API key. This API key will be stored safely encrypted in your user profile. If you don't provide any, Pandora will still work as a mere python console, but without the possibility to interact with the assistant.")
+    st.write("To interact with Pandora (the AI assistant) and enjoy voice interaction, you need to provide a valid OpenAI API key. This API key will be stored safely encrypted in your user profile. If you don't provide any, Pandora will still work as a mere python console, but without the possibility to interact with the assistant. In case you chose not to, you will still be able to register your API key at any time via the Settings page accessible from the sidebar.")
     def on_submit():
-        state.user_data.openai_api_key=state.openai_api_key_input
+        if state.openai_api_key_input:
+            state.user_data.openai_api_key=state.openai_api_key_input
+        state.user_data.made_api_key_choice=True
         dump_user_data()
         state.needs_rerun=True
         
@@ -543,7 +546,7 @@ if state.page=="goodbye":
 elif not state.firebase.auth.authenticated:
     #Ask for credentials
     make_login()
-elif not state.user_data.get('openai_api_key'):
+elif not state.user_data.get('openai_api_key') and not state.user_data.made_api_key_choice:
     make_OpenAI_API_request()
 elif not state.session_has_initialized:
     #Initialize the session
