@@ -193,8 +193,7 @@ def make_sign_up():
                     try:
                         state.firebase.auth.sign_up(state.sign_up_email,state.sign_up_password)
                     except Exception as e:
-                        st.warning("Something went wrong while attempting to create your account. Please try again.")
-                        st.exception(e) 
+                        st.warning(f"Error: {e.message}")
                     else:
                         state.password=state.sign_up_password
                         state.user_data=objdict(
@@ -227,7 +226,7 @@ def make_sign_in():
             try:
                 state.firebase.auth.sign_in(state.sign_in_email,state.sign_in_password)
             except Exception as e:
-                st.warning("Wrong email or password. Please try again.")
+                st.warning(f"Error: {e.message}")
             else:
                 state.password=state.sign_in_password
                 load_user_data()

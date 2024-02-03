@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="pandora_app",
-    version="0.0.19",
+    version="0.0.20",
     author="Baptiste Ferrand",
     author_email="bferrand.maths@gmail.com",
     description="Streamlit interface for the pandora_ai project.",
