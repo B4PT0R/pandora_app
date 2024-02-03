@@ -187,24 +187,30 @@ def make_menu():
 
 def make_sign_up():
     def on_submit_click():
-        if state.sign_up_username and state.sign_up_email and state.sign_up_password and state.sign_up_confirm_password and state.sign_up_password==state.sign_up_confirm_password:
-            try:
-                state.firebase.auth.sign_up(state.sign_up_email,state.sign_up_password)
-            except Exception as e:
-                st.warning("Something went wrong while attempting to create your account. Please try again.")
-                st.exception(e) 
+        if state.sign_up_username and state.sign_up_email and state.sign_up_password and state.sign_up_confirm_password:
+            if len(state.sign_up_password)>=8:
+                if state.sign_up_password==state.sign_up_confirm_password:
+                    try:
+                        state.firebase.auth.sign_up(state.sign_up_email,state.sign_up_password)
+                    except Exception as e:
+                        st.warning("Something went wrong while attempting to create your account. Please try again.")
+                        st.exception(e) 
+                    else:
+                        state.password=state.sign_up_password
+                        state.user_data=objdict(
+                            name=state.sign_up_username,
+                            openai_api_key=None,
+                            google_search_api_key=None,
+                            google_search_cx=None,
+                            made_api_key_choice=False,
+                            language='en'
+                        )
+                        dump_user_data()
+                        state.needs_rerun=True
+                else:
+                    st.warning("The password doesn't match its confirmation. Please try again.")
             else:
-                state.password=state.sign_up_password
-                state.user_data=objdict(
-                    name=state.sign_up_username,
-                    openai_api_key=None,
-                    google_search_api_key=None,
-                    google_search_cx=None,
-                    made_api_key_choice=False,
-                    language='en'
-                )
-                dump_user_data()
-                state.needs_rerun=True               
+                st.warning("Your password should be at least 8 characters long.")                   
         else:
             st.warning("Non-empty username, email and password required.")
 
@@ -269,6 +275,9 @@ def make_login():
 def make_settings():
     def on_submit():
         st.success("Settings saved")
+        if state.username_input:
+            state.user_data.name=state.username_input
+            state.agent.config.username=state.username_input
         if state.openai_api_key_input:
             state.user_data.openai_api_key=state.openai_api_key_input
         if state.google_search_api_key_input:
@@ -278,13 +287,15 @@ def make_settings():
         if state.select_lang:
             state.user_data.language=state.select_lang
             state.agent.config.language=state.select_lang
-            
+        
         dump_user_data()
         state.page="default"
         state.needs_rerun=True
 
     with st.form("settings"):
         st.subheader("Settings")
+        st.write("Your username (How Pandora should call you):")
+        st.text_input("Username",value=state.user_data.get('name'),key='username_input')
         st.write("OpenAI API key used to power the AI assistant:")
         st.text_input("OpenAI API key",value=state.user_data.get('openai_api_key'),key='openai_api_key_input')
         st.write("Google custom search credentials (used to enable the websearch tool):")
