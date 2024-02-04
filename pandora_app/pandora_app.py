@@ -415,7 +415,7 @@ def make_editor():
     event,state.file_content=editor(state.file_content,key=state.editor_key)
     if event=="close":
         close_editor()
-        st.experimental_rerun()
+        state.needs_rerun=True
     elif event=="open":
         def on_file_name_change():
             if not state.file_name==' ':
@@ -447,7 +447,7 @@ def make_editor():
     elif event=="new":
         state.editor_key=state.stacker.key_manager.gen_key()
         edit()
-        st.experimental_rerun()
+        state.needs_rerun=True
     elif event=="submit":
         if not state.open_file=='buffer':
             save_as(state.open_file)
