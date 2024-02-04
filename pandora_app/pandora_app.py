@@ -13,7 +13,7 @@ from streamlit_stacker import st_stacker
 from pandora_ai import Pandora, NoContext
 from tools.google_search import google_search
 from tools.tex_to_pdf import tex_to_pdf
-from tools.custom_code_editor import editor
+from tools.custom_code_editor import editor, ext_to_lang
 from streamlit_input_box import input_box
 from tools.whisperSTT import WhisperSTT
 from streamlit_TTS import openai_text_to_audio,auto_play
@@ -411,8 +411,10 @@ def make_chat():
 #Displays the editor
 def make_editor():
     st.subheader(f"Editing: {os.path.basename(state.open_file)}")
+    ext=os.path.splitext(state.open_file)[1]
+    lang=ext_to_lang(ext)
     empty=st.empty()
-    event,state.file_content=editor(state.file_content,key=state.editor_key)
+    event,state.file_content=editor(state.file_content,lang=lang,key=state.editor_key)
     if event=="close":
         close_editor()
         state.needs_rerun=True
