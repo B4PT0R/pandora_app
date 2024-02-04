@@ -8,6 +8,7 @@ python-dotenv
 seleniumbase
 spotipy
 streamlit
+streamlit-code-editor
 streamlit-input-box
 streamlit-mic-recorder
 streamlit-TTS

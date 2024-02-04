@@ -13,6 +13,7 @@ from streamlit_stacker import st_stacker
 from pandora_ai import Pandora, NoContext
 from tools.google_search import google_search
 from tools.tex_to_pdf import tex_to_pdf
+from tools.custom_code_editor import editor
 from streamlit_input_box import input_box
 from tools.whisperSTT import WhisperSTT
 from streamlit_TTS import openai_text_to_audio,auto_play
@@ -87,6 +88,18 @@ def initialize_state(state):
     if 'chat' not in state:
         state.chat=None
 
+    #the file currently open in the editor
+    if 'open_file' not in state:
+        state.open_file=None
+
+    #the content of the file currently open in the editor
+    if 'file_content' not in state:
+        state.file_content=None
+
+    #whether to show the editor or not
+    if 'show_editor' not in state:
+        state.show_editor=False
+
 
 initialize_state(state)
 stk=state.stacker
@@ -147,6 +160,42 @@ def dump_user_data():
             data[key]=encrypt(data[key],state.password)
     state.firebase.firestore.set_user_data(data)
 
+#Save the content of the editor as... 
+def save_as(file):
+    with open(file,'w') as f:
+        f.write(state.file_content)
+    state.open_file=file
+
+#Closes the editor
+def close_editor():
+    state.show_editor=False
+
+#Runs the code content open in the editor in the console  
+def run_editor_content():
+    code=state.file_content
+    with state.console_queue:
+        state.console.run(code)
+    #st.rerun()
+
+#Opens a new buffer or file in the editor (prefilled with an optional text)
+def edit(file='buffer',text=None,wait=False):
+    state.show_editor=True
+    state.open_file=file
+    if not file=='buffer':
+        if text is None:
+            if not os.path.exists(file):
+                file_content=""
+            else:
+                with open(file,'r') as f:
+                    file_content=f.read()
+        else:
+            file_content=text
+    else:
+        if text is None:
+            file_content=''
+        else:
+            file_content=text
+    state.file_content=file_content
     
 #---------------------------------App layout-------------------------------------
 
@@ -354,6 +403,76 @@ def make_chat():
         with state.chat:
             state.agent(prompt)
 
+#Displays the editor
+def make_editor():
+    st.subheader(f"Editing: {os.path.basename(state.open_file)}")
+    empty=st.empty()
+    event,state.file_content=editor(state.file_content,key=state.editor_key)
+    if event=="close":
+        close_editor()
+        st.experimental_rerun()
+    elif event=="open":
+        def on_file_name_change():
+            if not state.file_name==' ':
+                state.editor_key=state.stacker.key_manager.gen_key()
+                edit(user_join(state.file_name))
+        def get_relative_paths(folder_path):
+            """Get all relative paths of files in the given folder, recursively."""
+            relative_paths = []
+            for dirpath, dirnames, filenames in os.walk(folder_path):
+                for filename in filenames:
+                    rel_dir = os.path.relpath(dirpath, folder_path)
+                    rel_path = os.path.join(rel_dir, filename)
+                    if rel_path.startswith('./'):
+                        rel_path=rel_path[2:]
+                    relative_paths.append(rel_path)
+            return relative_paths
+        files = [' ']+get_relative_paths(state.user_folder)
+        with empty:
+            st.selectbox('Select a file:',files,on_change=on_file_name_change,index=0,key='file_name')
+    elif event=="delete":
+        def on_yes():
+            os.remove(state.open_file)
+            state.editor_key=state.stacker.key_manager.gen_key()
+            edit()
+            with empty:
+                st.success("File deleted.")
+        with empty:
+            st.selectbox('Are you sure you want to delete this file ?',['No','Yes'],on_change=on_yes,index=0,key='sure')  
+    elif event=="new":
+        state.editor_key=state.stacker.key_manager.gen_key()
+        edit()
+        st.experimental_rerun()
+    elif event=="submit":
+        if not state.open_file=='buffer':
+            save_as(state.open_file)
+            with empty:
+                st.success("File saved.")
+        else:
+            def on_file_name_change():
+                save_as(user_join(state.file_name))
+                with empty:
+                    st.success("File saved.")
+            with empty:
+                st.text_input("Enter name of file:",on_change=on_file_name_change,key='file_name')
+    elif event=="save_as":
+        def on_file_name_change():
+            save_as(user_join(state.file_name))
+            with empty:
+                st.success("File saved.")
+        with empty:
+            st.text_input("Enter name of file:",on_change=on_file_name_change,key='file_name')
+    elif event=="rename":
+        def on_file_name_change():
+            os.remove(state.open_file)
+            save_as(user_join(state.file_name))
+            with empty:
+                st.success("File renamed.")
+        with empty:
+            st.text_input("Enter new name of file:",on_change=on_file_name_change,key='file_name')
+    elif event=="run":
+        run_editor_content()
+
 def init_pandora():
 
         def text_to_audio(text,language=None):
@@ -519,6 +638,9 @@ def do_log_out():
         state.firebase.auth.log_out()
         if state.mode=='web':
             shutil.rmtree(state.user_folder)
+        state.open_file=None
+        state.file_content=None
+        state.show_editor=False
         state.user_data=None
         state.password=""
         state.user_folder=""
@@ -553,22 +675,39 @@ def make_goodbye():
 st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
 
 if state.page=="goodbye":
+    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
     make_goodbye()
 elif not state.firebase.auth.authenticated:
+    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
     #Ask for credentials
     make_login()
 elif not state.user_data.get('openai_api_key') and not state.user_data.made_api_key_choice:
+    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
     make_OpenAI_API_request()
 elif not state.session_has_initialized:
+    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
     #Initialize the session
     initialize_session()
 elif state.log_out:
+    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
     do_log_out()
 elif state.page=="settings":
+    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
     make_settings()
 else:
-    make_menu()
-    make_chat()
+    #Show the app's main page
+    if state.show_editor:
+        st.set_page_config(layout="wide",page_title="Pandora",initial_sidebar_state="collapsed")
+        make_menu()
+        console_column,editor_column=st.columns(2)
+        with console_column:
+            make_chat()
+        with editor_column:
+            make_editor()
+    else:
+        st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
+        make_menu()
+        make_chat()
 
 if state.needs_rerun:
     state.needs_rerun=False

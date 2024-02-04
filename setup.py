@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="pandora_app",
-    version="0.0.21",
+    version="0.0.22",
     author="Baptiste Ferrand",
     author_email="bferrand.maths@gmail.com",
     description="Streamlit interface for the pandora_ai project.",
@@ -45,6 +45,7 @@ setup(
         'seleniumbase',
         'spotipy',
         'streamlit',
+        'streamlit-code-editor',
         'streamlit-input-box',
         'streamlit-mic-recorder',
         'streamlit-TTS',
