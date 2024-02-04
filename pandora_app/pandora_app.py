@@ -104,7 +104,6 @@ def initialize_state(state):
     if 'show_editor' not in state:
         state.show_editor=False
 
-
 initialize_state(state)
 stk=state.stacker
 stk.reset()
@@ -137,12 +136,10 @@ def restart():
     stk.clear()
     init_pandora()
         
-
 #Clears the console's queue
 def clear():
     stk.clear()
     state.needs_rerun=True
-
 
 def prepare_user_folder():
     state.user_folder=Pandora.folder_join(state.user_data.name)
@@ -177,9 +174,9 @@ def close_editor():
 #Runs the code content open in the editor in the console  
 def run_editor_content():
     code=state.file_content
-    with state.console_queue:
-        state.console.run(code)
-    #st.rerun()
+    with state.chat:
+        state.agent(code)
+    state.needs_rerun=True
 
 #Opens a new buffer or file in the editor (prefilled with an optional text)
 def edit(file='buffer',text=None,wait=False):
@@ -565,7 +562,6 @@ def init_pandora():
             clear=clear,
             exit=log_out,
             quit=log_out,
-            edit=edit
         )
 
         state.agent.add_tool(
@@ -614,6 +610,27 @@ def init_pandora():
             obj=show_pdf
         )
         
+
+        def pandora_edit(*args,**kwargs):
+            edit(*args,**kwargs)
+            state.needs_rerun=True
+
+        state.agent.add_tool(
+            name='edit',
+            description="edit(file='buffer',text=None) # Opens a buffer or file in the default text editor, prefilled with an optional string of text.",
+            obj=pandora_edit,
+            parameters=dict(
+                file="(path) The file to open, defaults to 'buffer' to open an unnamed buffer.",
+                text="(string) The string of text used to prefill the editor's text content. defaults to None."
+            ),
+            example="""
+            edit() # will open a new empty buffer
+            edit(file="my_file.txt") # will open the file in the editor
+            edit(text="my_string") # will open a buffer prefilled with the text string
+            edit(file="my_file.txt",text="my_string") # will open the file and overwrite the content with the text string
+            """,
+            required=[]
+        )
 
         if state.mode=='local':
 
