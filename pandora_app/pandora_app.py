@@ -556,7 +556,8 @@ def init_pandora():
         state.agent.console.update_namespace(
             clear=clear,
             exit=log_out,
-            quit=log_out
+            quit=log_out,
+            edit=edit
         )
 
         state.agent.add_tool(
