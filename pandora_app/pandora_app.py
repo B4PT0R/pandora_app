@@ -235,7 +235,7 @@ def make_menu():
         st.button("Settings",on_click=on_settings_click,use_container_width=True)
 
         def on_editor_click():
-            state.show_editor=True
+            edit('buffer')
         st.button("Open editor",on_click=on_editor_click,use_container_width=True)
 
 def make_sign_up():
