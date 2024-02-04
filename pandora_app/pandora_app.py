@@ -88,6 +88,10 @@ def initialize_state(state):
     if 'chat' not in state:
         state.chat=None
 
+    #The current key of the editor ace widget
+    if 'editor_key' not in state:
+        state.editor_key = state.stacker.key_manager.gen_key()
+
     #the file currently open in the editor
     if 'open_file' not in state:
         state.open_file=None
