@@ -425,6 +425,7 @@ def init_pandora():
         ]
         builtin_tools=['message','codeblock','status','observe','generate_image','memory']
         state.agent=Pandora(openai_api_key=state.user_data.openai_api_key,work_folder=state.user_folder,builtin_tools=builtin_tools,preprompt=preprompt,infos=infos,input_hook=input_hook,display_hook=display_hook,context_handler=context_handler,text_to_audio_hook=text_to_audio,audio_play_hook=auto_play)
+        state.stacker.set_current_code_hook(state.agent.console.get_current_code)
         state.agent.config.update(
             voice_mode=False,
             username=state.user_data.name,
