@@ -234,6 +234,10 @@ def make_menu():
             state.page='settings'
         st.button("Settings",on_click=on_settings_click,use_container_width=True)
 
+        def on_editor_click():
+            state.show_editor=True
+        st.button("Open editor",on_click=on_editor_click,use_container_width=True)
+
 def make_sign_up():
     def on_submit_click():
         if state.sign_up_username and state.sign_up_email and state.sign_up_password and state.sign_up_confirm_password:
@@ -618,7 +622,6 @@ def init_pandora():
                 description="open_in_new_tab(file_or_url) # open any file or url in a new tab of the default webrowser. Used when there is no alternative to display/read some content directly in the chat.",
                 obj=open_in_new_tab
             )
-
 
 #Initialize the user's session
 def initialize_session():
