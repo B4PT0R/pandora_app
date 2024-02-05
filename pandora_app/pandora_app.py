@@ -135,6 +135,7 @@ def langs():
 def restart():
     stk.clear()
     init_pandora()
+    state.needs_rerun=True
         
 #Clears the console's queue
 def clear():
