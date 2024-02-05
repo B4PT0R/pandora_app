@@ -50,6 +50,19 @@ Pandora requires an OpenAI API key to enable the AI features. Your API key can b
 
 That's it, you can start typing your python commands or interact with Pandora in natural language via the input cell.
 
+## A few explanations and tips:
+
+- **Security** : Your account is managed via firebase authentication. Even as the admin, I don't have access to your password. Proper security rules are set in the firebase project to prevent anyone but you accessing your data.
+- **API keys**: all API keys needed to enable the AI features or other tools are transmitted and stored safely encrypted with your password in firebase. All efforts are made to ensure safe transmission and storage of sensitive data.
+- **Websearch**: In order to enable the websearch tool of the AI agent, you may provide your google custom search API key and CX in the Settings page.
+- **Storage**: All files you create during a session are dumped to firebase storage when you log out. You should therefore log out gracefully to avoid your work being lost. When using the web app, your user folder will be wiped from the app's file system once you log out. They will be uploaded again from firebase storage when you sign in.
+- **Stdin redirection**: When using a python command that wants to read from `stdin` such as the `input` command, the script will pause and a special input widget will render to let you enter a string. This string will be available immediately when your script resumes execution (without requiring a rerun). You can therefore use the `input` command in your scripts seamlessly. 
+-  **Shortcuts**: Running `exit()` or `quit()` commands in the console will log you out gracefully. Running `clear()` in the console will clear the chat (This won't affect the python session and context memory of the AI agent).
+- **Restart session**: You can restart the python session by clicking the 'Restart Session' button in the sidebar menu. This will also reinitialize the AI agent to its startup state. You can achieve a similar result by running `restart()` in the console.
+- **Editor**: A text editor is provided within the app to enable opening and editing files. You may open it via the 'Open editor' button in the sidebar. Alternatively you may use the `edit` function directly from the console. `edit(file=your_file,text=your_text)` will open your file in the editor, prefilled with an optional string of text.
+- **Pandora as a python object**: Pandora (the AI assistant) is declared as a python object in the console under the name `pandora`. You may thus interact with it programmatically.
+- **Observation**: Pandora is equipped with a special `observe` tool enabling it to look at the content of any folder, file, data structure, image... When applied to a module, class or function this will inspect the object and access its documentation. You may thus ask Pandora to observe almost anything to get information about it, including the `pandora` object itself !
+
 ## Use cases
 
 - **Python Programming Learning**: Use Pandora to learn Python with interactive examples and real-time explanations.
