@@ -14,6 +14,7 @@ streamlit-mic-recorder
 streamlit-TTS
 matplotlib
 numpy
+seaborn
 pandas
 graphviz
 altair

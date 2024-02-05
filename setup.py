@@ -51,6 +51,7 @@ setup(
         'streamlit-TTS',
         'matplotlib',
         'numpy',
+        'seaborn',
         'pandas',
         'graphviz',
         'altair',
