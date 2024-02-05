@@ -40,7 +40,8 @@ $ pandora
 
 The app will start a local webserver and launch in your default webbrowser.
 
-Alternatively you may use the web-app [here](https://pandora-ai.streamlit.app/)
+Alternatively you may use the web-app here:
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://pandora-ai.streamlit.app/)
 
 The installed app is local and runs python code locally on your system, but user connexion and cloud storage are managed via a cloud provider, so that your documents can be synchronized with the web application.
 
