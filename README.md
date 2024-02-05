@@ -5,6 +5,10 @@ Pandora App is a Streamlit interface for the [pandora_ai](https://github.com/B4P
 
 The App is designed to be user-friendly yet as powerful as an AI python console can be.
 
+## Demo Screenshot
+
+![Pandra screenshot](./pandora_app/app_images/pandora_demo.jpg)
+
 ## Main Features
 
 - **Python Console**: Execute Python commands/scripts in real time as in a conventional Python console, the AI can help you in your workflow at any time thanks to its continuous observation of the session and its capacity to generate and run scripts. You can even mix natural language sentences with segments of python code in the same input script!
