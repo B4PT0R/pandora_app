@@ -162,6 +162,9 @@ def dump_user_data():
             data[key]=encrypt(data[key],state.password)
     state.firebase.firestore.set_user_data(data)
 
+def dump_user_folder():
+    state.firebase.storage.dump_folder(state.user_folder)
+
 #Save the content of the editor as... 
 def save_as(file):
     with open(file,'w') as f:
@@ -544,12 +547,14 @@ def init_pandora():
             ('st.pyplot(plt)','st.pyplot(plt.gcf())'),
             ('st.pyplot()','st.pyplot(plt.gcf())'),
             ]
+        env="User's local system" if state.mode=='local' else "Streamlit cloud server"
         infos=[
-            "Code execution environment: User's local system",
+            f"Code execution environment: {env}",
             "The user's OpenAI api key (and other secrets) necessary to make you and your tools function are all stored safely encrypted in the users database."
-            "clear() method clears the chat (wipes all messages and widgets from the st_stacker's stack). Context memory remains.",
-            "exit() or quit() methods ends the session and logs the user out gracefully.",
-            "restart() method will restart the whole python session (including the AI assistant) to its startup state."
+            "clear() will clear the chat (wipe all messages and widgets from the st_stacker's stack). Context memory will remain.",
+            "exit() or quit() will end the session and log the user out gracefully.",
+            "restart() will restart the whole python session (including the AI assistant) to its startup state.",
+            "dump_workfolder() will dump the whole user folder to cloud storage."
         ]
         builtin_tools=['message','codeblock','status','observe','generate_image','memory']
         state.agent=Pandora(openai_api_key=state.user_data.openai_api_key,work_folder=state.user_folder,builtin_tools=builtin_tools,preprompt=preprompt,infos=infos,input_hook=input_hook,display_hook=display_hook,context_handler=context_handler,text_to_audio_hook=text_to_audio,audio_play_hook=auto_play)
@@ -566,7 +571,8 @@ def init_pandora():
             clear=clear,
             exit=log_out,
             quit=log_out,
-            restart=restart
+            restart=restart,
+            dump_workfolder=dump_user_folder,
         )
 
         state.agent.add_tool(
