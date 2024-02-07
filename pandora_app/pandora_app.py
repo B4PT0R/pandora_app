@@ -405,11 +405,6 @@ def make_chat():
     with c:
         st.image(root_join("app_images","pandora_logo.png"),use_column_width=True)
 
-    with st.expander("Click here to get help."):
-        with open(root_join("quick_help.md"),'r') as f:
-            quick_help=f.read()
-        st.write(quick_help)
-
     state.chat=st.container()
 
     with state.chat:
