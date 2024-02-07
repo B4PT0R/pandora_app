@@ -245,6 +245,11 @@ def make_menu():
             edit('buffer')
         st.button("Open editor",on_click=on_editor_click,use_container_width=True)
 
+        def on_help_click():
+            state.page='help'
+
+        st.button("About / Help",on_click=on_help_click,use_container_width=True)
+
 def make_sign_up():
     def on_submit_click():
         if state.sign_up_username and state.sign_up_email and state.sign_up_password and state.sign_up_confirm_password:
@@ -386,6 +391,13 @@ def make_help():
     with open(root_join("quick_help.md"),'r') as f:
         quick_help=f.read()
     st.write(quick_help)
+
+    def on_ok_click():
+        state.page="default"
+
+    _,d,_=st.columns([30,40,30])
+    with d:
+        st.button("OK", on_click=on_ok_click,use_container_width=True)
 
 def make_chat():
 
