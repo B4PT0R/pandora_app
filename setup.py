@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="pandora_app",
-    version="0.0.36",
+    version="0.0.37",
     author="Baptiste Ferrand",
     author_email="bferrand.maths@gmail.com",
     description="Streamlit interface for the pandora_ai project.",
@@ -24,16 +24,15 @@ setup(
             'pandora = pandora_app.launch_app:main',
         ],
     },
-    # Include the launch script in the package data
     package_data={
         'pandora_app': [
             'launch_app.py',
-            '.streamlit/*',  # Include all files in the .streamlit folder
-            'app_images/*',  # Include all files in the app_images folder
-            'app_config.json'
+            '.streamlit/*',
+            'app_images/*',
+            'app_config.json',
+            "quick_help.md"
         ],
     },
-    # Specify the dependencies
     install_requires=[
         "pandora-ai",
         "streamlit-stacker",

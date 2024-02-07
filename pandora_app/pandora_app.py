@@ -378,13 +378,26 @@ def make_OpenAI_API_request():
         st.text_input("Please enter your OpenAI API key (leave blank if you don't want to):",type="password",key="openai_api_key_input")
         st.form_submit_button("Submit",on_click=on_submit)
 
+def make_help():
+    _,c,_=st.columns([30,40,30])
+    with c:
+        st.image(root_join("app_images","pandora_logo.png"),use_column_width=True)
+
+    with open(root_join("quick_help.md"),'r') as f:
+        quick_help=f.read()
+    st.write(quick_help)
+
 def make_chat():
 
     _,c,_=st.columns([15,70,15])
     with c:
         st.image(root_join("app_images","pandora_logo.png"),use_column_width=True)
 
-    
+    with st.expander("Click here to get help."):
+        with open(root_join("quick_help.md"),'r') as f:
+            quick_help=f.read()
+        st.write(quick_help)
+
     state.chat=st.container()
 
     with state.chat:
@@ -738,6 +751,9 @@ elif state.log_out:
 elif state.page=="settings":
     st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
     make_settings()
+elif state.page=='help':
+    st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
+    make_help()
 else:
     #Show the app's main page
     if state.show_editor:
