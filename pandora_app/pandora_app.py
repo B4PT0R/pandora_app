@@ -1,5 +1,6 @@
 import os,sys
 _root_=os.path.dirname(os.path.abspath(__file__))
+os.environ['ROOT_PATH']=_root_
 def root_join(*args):
     return os.path.join(_root_,*args)
 
