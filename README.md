@@ -55,6 +55,65 @@ Pandora requires an OpenAI API key to enable the AI features. Your API key can b
 
 That's it, you can start typing your python commands or interact with Pandora in natural language via the input cell.
 
+## Working with Streamlit in Pandora
+
+[Streamlit](https://streamlit.io/) is a user friendly yet powerful framework to generate interactive web apps using only python code. All Streamlit commands can be used directly in the Pandora console to render all kinds of interactive and programmable widgets (button, text input, slider, multiselector, pretty plots, data tables...) in the chat interface. Please refer to the [Streamlit documentation](https://docs.streamlit.io/library/api-reference) to get to know all the awesome widgets Streamlit features. 
+
+One thing to keep in mind when using Streamlit commands in the Pandora console is that your scripts will run only once, therefore you can’t rely on a similar scripting logic as conventional Streamlit scripts relying on the script looping on itself : Namely, all interactivity must be implemented using callbacks.
+
+Second thing to be aware of is that the console uses a special object (st_stacker) pre-declared as `st` to mimic the behavior of the streamlit module. You can use this module with similar commands and syntax as streamlit, with one minor change though : All widgets you will declare won’t output their state value directly, but an st_output placeholder object instead. This placeholder object has a .value property that will be updated in real time as soon as your widget is rendered and have a non-empty state.
+
+Remember that the AI can help you at any time in case you have questions about the specific intergration of Streamlit in this console.
+
+## Examples
+
+Here are a few scripts to showcase how the integration of Streamlit works in the Pandora environment. Just copy/paste them in the console and run them to see the result (Ctrl+Enter to submit).
+
+1. Show a text input and a button with callback to display the text content:
+
+```python
+txt=st.text_input("Enter text here:") # txt in not a string here, but an st_output object
+
+def callback(txt):
+    if txt.value:
+        # Access the actualized value of the widget via the .value property
+        st.write(f"You entered : {txt.value}") 
+
+st.button("Click me", on_click=callback,args=(txt,))
+```
+
+2. Render an interactive plot with a slider:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Create a figure and axis object
+fig, ax = plt.subplots()
+
+# Initial plot
+x = np.linspace(0, 1, 100)
+ax.plot(x, x)
+
+# Display the initial plot
+st.pyplot(fig)
+
+# Function to replot the graph
+def replot():
+    # Clear the current plot
+    ax.clear()
+    # Generate new x values
+    x = np.linspace(0, 1, 100)
+    # Get the current value of the slider
+    n = slider.value
+    # Plot the new data
+    ax.plot(x, x**n)
+
+# Create a slider widget
+slider = st.slider('Select exponent', min_value=0.0, max_value=2.0, value=1.0, step=0.1, on_change=replot)
+```
+
+
 ## A few explanations and tips:
 
 - **Security** : Your account is managed via firebase authentication. Even as the admin, I don't have access to your password. Proper security rules are set in the firebase project to prevent anyone but you accessing your data.
@@ -72,6 +131,7 @@ That's it, you can start typing your python commands or interact with Pandora in
 - **LaTeX and PDF**: The web-app comes equipped with a minimal LaTeX distribution enabling Pandora to use pdflatex to generate pdf documents from .tex files. A dedicated tool is declared in the console as `tex_to_pdf(tex_file,pdf_file)`. To be able to use it via the local app, you should have a LaTeX distribution and pdflatex installed on your computer. A custom streamlit widget enables displaying pdf files in the chat, you can use it via the `show_pdf(file_or_url)` shortcut.
 - **Memory**: Pandora uses a `memory.json` file associated to your user profile for storing and remembering any kind of information across sessions. The assistant has permanent contextual visibility on the memory content. You can use it to guide the assistant towards the desired behavior, save user information, preferences or memos. Just ask Pandora and it will remember something durably.
 - **Startup**: A `startup.py` file specific to your user profile will be executed whenever a new session starts. You may use it to pre-declare your favorite functions/tools to avoid having to declare them manually every new session. You may also use it to declare custom tools the agent will be able to use via the `pandora.add_tool` method. You will find the `memory.json` and `startup.py` files in the `config` folder of your workfolder. Feel free to edit them with the built-in editor.
+
 
 ## Use cases
 
