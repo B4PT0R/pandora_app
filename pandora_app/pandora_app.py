@@ -12,6 +12,7 @@ from tools.crypto import encrypt,decrypt,gen_lock, check_lock
 import streamlit as st
 from streamlit_stacker import st_stacker
 from pandora_ai import Pandora, NoContext
+from pandora_ai.get_webdriver import get_webdriver
 from tools.google_search import google_search
 from tools.tex_to_pdf import tex_to_pdf
 from tools.custom_code_editor import editor, ext_to_lang
@@ -629,10 +630,10 @@ def init_pandora():
 
         state.agent.add_tool(
             name='edit',
-            description="edit(file='buffer',text=None) # Opens a buffer or file in the default text editor, prefilled with an optional string of text.",
+            description="edit(file='buffer',text=None) # Opens a buffer or file in the default text editor widget to let the user visualize and edit it, prefilled with an optional string of text.",
             obj=pandora_edit,
             parameters=dict(
-                file="(path) The file to open, defaults to 'buffer' to open an unnamed buffer.",
+                file="(path) The file to open in the editor widget, defaults to 'buffer' to open an unnamed buffer.",
                 text="(string) The string of text used to prefill the editor's text content. defaults to None."
             ),
             example="""
@@ -642,6 +643,14 @@ def init_pandora():
             edit(file="my_file.txt",text="my_string") # will open the file and overwrite the content with the text string
             """,
             required=[]
+        )
+
+
+
+        state.agent.add_tool(
+            name="get_webdriver",
+            description="driver=get_webdriver() # Returns a pre-configured and ready to use headless firefox selenium webdriver. Use it to interact with web pages programmatically.",
+            obj=get_webdriver
         )
 
         if state.mode=='local':
