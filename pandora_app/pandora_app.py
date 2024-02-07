@@ -719,29 +719,29 @@ def make_goodbye():
 #-----------------------------Main app session's logic-------------------------
 
 if state.page=="goodbye":
-    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
+    st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
     make_goodbye()
 elif not state.firebase.auth.authenticated:
-    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
+    st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
     #Ask for credentials
     make_login()
 elif not state.user_data.get('openai_api_key') and not state.user_data.made_api_key_choice:
-    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
+    st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
     make_OpenAI_API_request()
 elif not state.session_has_initialized:
-    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
+    st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
     #Initialize the session
     initialize_session()
 elif state.log_out:
-    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
+    st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
     do_log_out()
 elif state.page=="settings":
-    st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
+    st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
     make_settings()
 else:
     #Show the app's main page
     if state.show_editor:
-        st.set_page_config(layout="wide",page_title="Pandora",initial_sidebar_state="collapsed")
+        st.set_page_config(layout="wide",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
         make_menu()
         console_column,editor_column=st.columns(2)
         with console_column:
@@ -749,7 +749,7 @@ else:
         with editor_column:
             make_editor()
     else:
-        st.set_page_config(layout="centered",page_title="Pandora",initial_sidebar_state="collapsed")
+        st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
         make_menu()
         make_chat()
 
