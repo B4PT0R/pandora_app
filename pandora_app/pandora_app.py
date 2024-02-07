@@ -388,6 +388,18 @@ def make_help():
     with c:
         st.image(root_join("app_images","pandora_logo.png"),use_column_width=True)
 
+    title_html = f"""
+    <div style="
+        background-color: {state.config.theme.backgroundColor};
+        text-align: center;
+        ">
+        <h1 style="color: {state.config.theme.primaryColor}; margin-bottom: 0;">Pandora</h1>
+        <hr style="border: 1px solid {state.config.theme.primaryColor}; margin: 5px auto; width: 50%;" />
+        <p style="color: {state.config.theme.primaryColor}; margin-top: 0;">OpenAI + Streamlit powered Python console</p>
+    </div>
+    """
+    st.markdown(title_html, unsafe_allow_html=True)
+
     with open(root_join("quick_help.md"),'r') as f:
         quick_help=f.read()
     st.write(quick_help)
