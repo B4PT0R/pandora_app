@@ -79,7 +79,7 @@ That's it, you can start typing your python commands or interact with Pandora in
 
 - **Automatic Document/Image Generation**: Ask Pandora to generate documents or images based on textual descriptions.
 
-- **Web Content Search and Extraction**: Use Pandora to find information on the Internet and extract it for later use.
+- **Web Content Search and Extraction**: Use Pandora to navigate, find an extract information on the Internet thanks to its headless firefox webriver.
 
 - **Modular use of custom tools you provide to the AI**: Pass the AI any new tool to play with (custom functions, python objects, APIs,...)
 
