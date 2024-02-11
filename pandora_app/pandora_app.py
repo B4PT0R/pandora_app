@@ -677,25 +677,10 @@ def init_pandora():
             required=[]
         )
 
-
-
         state.agent.add_tool(
             name="get_webdriver",
             description="driver=get_webdriver() # Returns a pre-configured and ready to use headless firefox selenium webdriver. Use it to interact with web pages programmatically.",
             obj=get_webdriver
-        )
-
-        def pandora_help():
-            state.agent.observe(root_join("quick_help.md"))
-            s="Please help the user understand better your functionning based on the help section observed above."
-            msg=Message(content=s,role="system",name="system_bot")
-            state.agent.add_message(msg)
-            state.agent.process()
-
-        state.agent.add_tool(
-            name="pandora_help",
-            description="pandora_help() # This function is called whenever the user needs explanation about your functioning. This will inject the help section of the application in your context to enable you craft a precise and detailed answer.",
-            obj=pandora_help
         )
 
         if state.mode=='local':
