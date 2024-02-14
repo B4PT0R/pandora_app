@@ -109,6 +109,7 @@ def initialize_state(state):
 initialize_state(state)
 stk=state.stacker
 stk.reset()
+stk.mode='streamed'
 
 #------------------------------Main functions-------------------------------------
 
@@ -785,6 +786,8 @@ else:
         st.set_page_config(layout="centered",page_title="Pandora",page_icon=root_join("app_images","pandora_logo.png"),initial_sidebar_state="collapsed")
         make_menu()
         make_chat()
+
+stk.mode='static'
 
 if state.needs_rerun:
     state.needs_rerun=False
