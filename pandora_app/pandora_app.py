@@ -8,16 +8,15 @@ if not sys.path[0]==_root_:
     sys.path.insert(0,_root_)
 
 from tools.restrict_module import restrict_module
-from tools.crypto import encrypt,decrypt,gen_lock, check_lock
+from tools.crypto import encrypt,decrypt
 import streamlit as st
+from streamlit.runtime.scriptrunner import add_script_run_ctx
 from streamlit_stacker import st_stacker
 from pandora_ai import Pandora, NoContext, Message
-from pandora_ai.get_webdriver import get_webdriver
-from tools.google_search import google_search
 from tools.tex_to_pdf import tex_to_pdf
 from tools.custom_code_editor import editor, ext_to_lang
 from streamlit_input_box import input_box
-from tools.whisperSTT import WhisperSTT
+from tools.whisper_stt import whisper_stt
 from streamlit_TTS import openai_text_to_audio,auto_play
 from firebase_user import FirebaseClient
 from objdict_bf import objdict
@@ -223,9 +222,9 @@ def make_menu():
             state.agent.config.enabled=state.enabled
         st.toggle("Assistant enabled",value=state.agent.config.enabled,on_change=on_enabled_change,key='enabled')
 
-        def on_voice_mode_change():
-            state.agent.config.voice_mode=state.voice_mode
-        st.toggle("Voice enabled",value=state.agent.config.voice_mode,on_change=on_voice_mode_change,key='voice_mode')
+        def on_voice_enabled_change():
+            state.agent.config.voice_enabled=state.voice_enabled
+        st.toggle("Voice enabled",value=state.agent.config.voice_enabled,on_change=on_voice_enabled_change,key='voice_enabled')
 
         def on_lang_change():
             state.user_data.language=state.language
@@ -425,7 +424,7 @@ def make_chat():
     text=input_box(just_once=True,min_lines=1,max_lines=100,key='text')
     a,b=st.columns(2)
     with a:
-        voice=WhisperSTT(openai_api_key=state.user_data.openai_api_key,start_prompt="Talk to Pandora",use_container_width=True,language=state.user_data.language,just_once=True,key='voice')
+        voice=whisper_stt(openai_api_key=state.user_data.openai_api_key,start_prompt="Talk to Pandora",use_container_width=True,language=state.user_data.language,just_once=True,key='voice')
     with b:
         drop_file=st.button("Drop a file",use_container_width=True)
 
@@ -527,19 +526,16 @@ def init_pandora():
             txt=stk.modal_input(firebase_client=state.firebase)
             return txt.value
 
-        def display_hook(message,status):
-            if message.tag in ['interpreter','user_code']:
-                stk.text(message.content)
-            elif message.tag in ['user_message']:
-                stk.write(message.content)
-            elif message.tag in ['assistant_message']:
-                stk.write(message.content)
-            elif message.tag in ['assistant_code']:
-                with status:
-                    stk.code(message.content)
-            elif message.tag in ['status']:
-                if not message.content=="#DONE#":
-                    status.value.update(label=message.content,state="running")
+        def display_hook(content,tag,status):
+            if tag in ['user_message','assistant_message']:
+                stk.write(content)
+            elif tag in ['user_code']:
+                stk.code(content, language='python')
+            elif tag in ['interpreter']:
+                stk.code(content,language='text')
+            elif tag in ['status']:
+                if not content=="#DONE#":
+                    status.value.update(label=content,state="running")
                 else:
                     status.value.update(state="complete")
             else:
@@ -547,10 +543,11 @@ def init_pandora():
 
         def context_handler(message):
             if message.tag in ['user_message','assistant_message','user_code','interpreter']:
-                msg=stk.chat_message(name=message.role,avatar=avatar(message.role))
-                return msg
+                with stk.chat_message(name=message.role,avatar=avatar(message.role)):
+                    e=stk.empty()
+                return e
             elif message.tag in ['status']:
-                status=stk.status(label='Done',state="running")
+                status=stk.status(label='Done',state="complete")
                 return status
             else:
                 return NoContext()
@@ -590,11 +587,11 @@ def init_pandora():
             "restart() will restart the whole python session (including the AI assistant) to its startup state.",
             "dump_workfolder() will dump the whole user folder to cloud storage."
         ]
-        builtin_tools=['message','codeblock','status','observe','generate_image','memory']
-        state.agent=Pandora(openai_api_key=state.user_data.openai_api_key,work_folder=state.user_folder,builtin_tools=builtin_tools,preprompt=preprompt,infos=infos,input_hook=input_hook,display_hook=display_hook,context_handler=context_handler,text_to_audio_hook=text_to_audio,audio_play_hook=auto_play)
+        builtin_tools=['observe','generate_image','memory','websearch','get_webdriver']
+        state.agent=Pandora(openai_api_key=state.user_data.openai_api_key,google_custom_search_api_key=state.user_data.google_custom_search_api_key,google_custom_search_cx=state.user_data.google_custom_search_cx, work_folder=state.user_folder,builtin_tools=builtin_tools,preprompt=preprompt,infos=infos,input_hook=input_hook,display_hook=display_hook,context_handler=context_handler,text_to_audio_hook=text_to_audio,audio_play_hook=auto_play,thread_decorator=add_script_run_ctx)
         state.stacker.set_current_code_hook(state.agent.console.get_current_code)
         state.agent.config.update(
-            voice_mode=False,
+            voice_enabled=False,
             username=state.user_data.name,
             code_replacements=replacements,
             language=state.user_data.language,
@@ -615,25 +612,6 @@ def init_pandora():
             obj=state.stacker,
             type="object"
         )
-
-        if state.user_data.get('google_search_api_key'):
-
-            
-            def websearch(*args,**kwargs):
-                results=google_search(state.user_data.google_search_api_key,state.user_data.google_search_cx,*args,**kwargs)
-                state.agent.observe(results)
-
-            state.agent.add_tool(
-                name="websearch",
-                description="websearch(query,num=5,type='web') # Make a google search. Results are automatically observed.",
-                parameters=dict(
-                    query="The search query.",
-                    num="The desired number of search results.",
-                    type="either 'web' or 'image', determines the type of the research."
-                ),
-                required=['query'],
-                obj=websearch
-            )
 
         state.agent.add_tool(
             name='tex_to_pdf',
@@ -676,24 +654,6 @@ def init_pandora():
             """,
             required=[]
         )
-
-        state.agent.add_tool(
-            name="get_webdriver",
-            description="driver=get_webdriver() # Returns a pre-configured and ready to use headless firefox selenium webdriver. Use it to interact with web pages programmatically.",
-            obj=get_webdriver
-        )
-
-        if state.mode=='local':
-
-            def open_in_new_tab(url):
-                import webbrowser
-                webbrowser.open(url)
-
-            state.agent.add_tool(
-                name="open_in_new_tab",
-                description="open_in_new_tab(file_or_url) # open any file or url in a new tab of the default webrowser. Used when there is no alternative to display/read some content directly in the chat.",
-                obj=open_in_new_tab
-            )
 
 #Initialize the user's session
 def initialize_session():

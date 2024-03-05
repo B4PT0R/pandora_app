@@ -13,7 +13,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv(_root_)
 
-def WhisperSTT(openai_api_key=None,start_prompt="Start recording",stop_prompt="Stop recording",just_once=False,use_container_width=False,language=None,callback=None,args=(),kwargs={},key=None):
+def whisper_stt(openai_api_key=None,start_prompt="Start recording",stop_prompt="Stop recording",just_once=False,use_container_width=False,language=None,callback=None,args=(),kwargs={},key=None):
     if not 'openai_client' in st.session_state:
         if openai_api_key:
             st.session_state.openai_client=OpenAI(api_key=openai_api_key)
