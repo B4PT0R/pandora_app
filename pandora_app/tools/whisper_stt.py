@@ -15,8 +15,8 @@ load_dotenv(_root_)
 
 def whisper_stt(openai_api_key=None,start_prompt="Start recording",stop_prompt="Stop recording",just_once=False,use_container_width=False,language=None,callback=None,args=(),kwargs={},key=None):
     if not 'openai_client' in st.session_state:
-        if openai_api_key:
-            st.session_state.openai_client=OpenAI(api_key=openai_api_key)
+        if openai_api_key or os.getenv('OPENAI_API_KEY'):
+            st.session_state.openai_client=OpenAI(api_key=openai_api_key or os.getenv('OPENAI_API_KEY'))
         else:
             st.session_state.openai_client=None
     if not '_last_speech_to_text_transcript_id' in st.session_state:
@@ -25,7 +25,7 @@ def whisper_stt(openai_api_key=None,start_prompt="Start recording",stop_prompt="
         st.session_state._last_speech_to_text_transcript=None
     if key and not key+'_output' in st.session_state:
         st.session_state[key+'_output']=None
-    audio = mic_recorder(start_prompt=start_prompt,stop_prompt=stop_prompt,just_once=just_once,use_container_width=use_container_width,key=key)
+    audio = mic_recorder(start_prompt=start_prompt,stop_prompt=stop_prompt,just_once=just_once,use_container_width=use_container_width,format="webm",key=key)
     new_output=False
     if audio is None:
         output=None
@@ -36,7 +36,7 @@ def whisper_stt(openai_api_key=None,start_prompt="Start recording",stop_prompt="
             output=None
             st.session_state._last_speech_to_text_transcript_id=id
             audio_BIO = io.BytesIO(audio['bytes'])
-            audio_BIO.name='audio.mp3'
+            audio_BIO.name='audio.webm'
             success=False
             err=0
             while not success and err<3: #Retry up to 3 times in case of OpenAI server error.
