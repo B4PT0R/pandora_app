@@ -588,7 +588,7 @@ def init_pandora():
             "restart() will restart the whole python session (including the AI assistant) to its startup state.",
             "dump_workfolder() will dump the whole user folder to cloud storage."
         ]
-        builtin_tools=['observe','generate_image','memory','websearch','get_webdriver','retriever']
+        builtin_tools=['observe','generate_image','memory','websearch','get_webdriver','retriever','get_text']
         state.agent=Pandora(openai_api_key=state.user_data.openai_api_key,google_custom_search_api_key=state.user_data.google_search_api_key,google_custom_search_cx=state.user_data.google_search_cx, work_folder=state.user_folder,builtin_tools=builtin_tools,preprompt=preprompt,infos=infos,input_hook=input_hook,display_hook=display_hook,context_handler=context_handler,text_to_audio_hook=text_to_audio,audio_play_hook=auto_play,thread_decorator=add_script_run_ctx)
         state.stacker.set_current_code_hook(state.agent.console.get_current_code)
         state.agent.config.update(
